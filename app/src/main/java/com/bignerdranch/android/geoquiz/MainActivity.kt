@@ -23,7 +23,11 @@ class MainActivity : AppCompatActivity() {
         Question(R.string.question_americas, true),
         Question(R.string.question_asia, true))
 
+    private val alreadyAnswered = MutableList(questionBank.size,{false})
     private var currentIndex = 0
+    private var numberAnswered = 0
+    private var answeredCorrectly = 0
+
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -37,20 +41,23 @@ class MainActivity : AppCompatActivity() {
 
         trueButton.setOnClickListener { view: View ->
             checkAnswer(true)
-            trueButton.isEnabled = false
+            updateUI()
+
         }
         falseButton.setOnClickListener { view: View ->
             checkAnswer(false)
-            falseButton.isEnabled = false
+            updateUI()
+
         }
         nextButton.setOnClickListener {
             currentIndex = (currentIndex + 1) % questionBank.size
             updateQuestion()
-            trueButton.isEnabled = true
-            falseButton.isEnabled = true
+            updateUI()
+
 
         }
         updateQuestion()
+        updateUI()
     }
     override fun onStart() {
         super.onStart()
@@ -76,6 +83,10 @@ class MainActivity : AppCompatActivity() {
         super.onDestroy()
         Log.d(TAG, "onDestroy() called")
     }
+    private fun updateUI(){
+       trueButton.isEnabled = !alreadyAnswered[currentIndex]
+        falseButton.isEnabled = !alreadyAnswered[currentIndex]
+    }
     private fun updateQuestion() {
         val questionTextResId = questionBank[currentIndex].textResId
         questionTextView.setText(questionTextResId)
@@ -84,6 +95,7 @@ class MainActivity : AppCompatActivity() {
         val correctAnswer = questionBank[currentIndex].answer
 
         val messageResId = if (userAnswer == correctAnswer) {
+            ++answeredCorrectly
             R.string.correct_toast
         } else {
             R.string.incorrect_toast
@@ -91,5 +103,15 @@ class MainActivity : AppCompatActivity() {
 
         Toast.makeText(this, messageResId, Toast.LENGTH_SHORT)
             .show()
+        alreadyAnswered[currentIndex] = true
+        ++numberAnswered
+        if( numberAnswered == questionBank.size){
+            var pc = answeredCorrectly * 100.0 / questionBank.size
+            Toast.makeText(
+                this,
+               "You scored ${answeredCorrectly} out of ${questionBank.size} for a score of ${pc}" ,
+            Toast.LENGTH_LONG
+            ).show()
+        }
     }
 }
